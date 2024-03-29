@@ -16,11 +16,11 @@ const taskSchema = new Schema<ITask>({
         type: Boolean,
         default: false
     },
-    // owner: {
-    //     type: Schema.Types.ObjectId,
-    //     required: true,
-    //     ref: 'User'
-    // }
+    owner: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    }
 }, {
     timestamps: true
 })
