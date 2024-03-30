@@ -1,24 +1,20 @@
 const mongoose = require('mongoose')
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import { Model, model, Schema, Types } from "mongoose"
+import { Model, model, Schema, Types, Document, FlatRecord } from "mongoose"
 // const bcrypt = require('bcryptjs')
 // const jwt = require('jsonwebtoken')
 
 import { isValidEmail } from "../utils/validation"
 import Task from "./task"
 import config from '../types/env'
-import { userJSON } from '../types/user'
+import { postUserBody, userJSON } from '../types/user'
 
 interface IToken{
     token: string
 
 }
-interface IUser{
-    name: string,
-    email: string, 
-    password: string,
-    age: number
+interface IUser extends postUserBody{
     tokens: Types.Array<IToken>,
     avatar: Buffer
 } 
@@ -29,9 +25,9 @@ interface IUserMethods{
 
 // type UserModel = Model<IUser, {}, IUserMethods>
 interface UserModel extends Model<IUser, {}, IUserMethods> {
-    findByCredentials(email: string, password: string): Promise<(IUser & Omit<IUser & {
+    findByCredentials(email: string, password: string): Promise<Document<unknown, {}, FlatRecord<IUser>> & Omit<FlatRecord<IUser> & {
         _id: Types.ObjectId;
-    }, "generateAuthToken"> & IUserMethods) | null>;
+    }, keyof IUserMethods> & IUserMethods>;
   }
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     name: {
@@ -112,6 +108,7 @@ userSchema.method('generateAuthToken',async function generateAuthToken(){
 //this property exits on toObjext but unable to right , createdAt: Date, updatedAt: Date, __v:number
 userSchema.method('toJSON', async function toJSON():Promise<{_id: Types.ObjectId, name: string, age: number, email: string} >{
     const user = this
+    
     let userObj = user.toObject();
     const {tokens, avatar, password ,...newObj } = userObj;
     return newObj;
@@ -126,13 +123,11 @@ userSchema.pre('save', async function(next){
 
 userSchema.static("findByCredentials",async function(email, password){
     const user = await User.findOne({ email })
-    console.log('user found ', user)
     if (!user) {
         throw new Error('Unable to login')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
-    console.log('dont passwrld match',isMatch)
     if (!isMatch) {
         throw new Error('Unable to login')
     }
