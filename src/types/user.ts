@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
-
+import { userMongo } from '../models/user';
+import { Request } from "express";
 interface postLoginBody{
     email: string, 
     password: string
@@ -17,4 +18,11 @@ interface userJSON{
     createdAt: Date,
     updatedAt: Date,
 }
-export {userJSON, postUserBody, postLoginBody}
+
+// interface userRequest extends Request{
+  
+// }
+type userRequest = Request & {  user ?: userMongo 
+    token?: string }
+
+export {userJSON, postUserBody, postLoginBody, userRequest}
