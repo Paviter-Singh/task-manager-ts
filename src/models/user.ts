@@ -12,10 +12,9 @@ import { postUserBody, userJSON } from '../types/user'
 
 interface IToken{
     token: string
-
 }
 interface IUser extends postUserBody{
-    tokens: Types.Array<IToken>,
+    tokens: Array<IToken>,
     avatar: Buffer
 } 
 interface IUserMethods{
@@ -23,11 +22,13 @@ interface IUserMethods{
     toJSON(): Promise<userJSON & { _id: Types.ObjectId}>,
 }
 
+
+type userMongo = (Document<unknown, {}, IUser> & Omit<IUser & {
+    _id: Types.ObjectId;
+}, keyof IUserMethods> & IUserMethods) | null 
 // type UserModel = Model<IUser, {}, IUserMethods>
 interface UserModel extends Model<IUser, {}, IUserMethods> {
-    findByCredentials(email: string, password: string): Promise<Document<unknown, {}, FlatRecord<IUser>> & Omit<FlatRecord<IUser> & {
-        _id: Types.ObjectId;
-    }, keyof IUserMethods> & IUserMethods>;
+    findByCredentials(email: string, password: string): Promise<NonNullable<userMongo>>;
   }
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     name: {
@@ -137,3 +138,5 @@ userSchema.static("findByCredentials",async function(email, password){
 const User = model<IUser, UserModel>("User", userSchema)
 
 export default User
+
+export { userMongo, IToken }
