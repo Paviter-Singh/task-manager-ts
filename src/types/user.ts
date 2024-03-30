@@ -1,5 +1,14 @@
 import { Types } from 'mongoose';
 
+interface postLoginBody{
+    email: string, 
+    password: string
+}
+interface postUserBody extends postLoginBody{
+    name: string,
+    age: number,
+}
+
 interface userJSON{
     _id: Types.ObjectId, 
     name: string, 
@@ -8,5 +17,4 @@ interface userJSON{
     createdAt: Date,
     updatedAt: Date,
 }
-
-export {userJSON}
+export {userJSON, postUserBody, postLoginBody}
