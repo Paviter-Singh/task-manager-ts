@@ -8,6 +8,7 @@ import { Model, model, Schema, Types } from "mongoose"
 import { isValidEmail } from "../utils/validation"
 import Task from "./task"
 import config from '../types/env'
+import { userJSON } from '../types/user'
 
 interface IToken{
     token: string
@@ -22,11 +23,16 @@ interface IUser{
     avatar: Buffer
 } 
 interface IUserMethods{
-    generateAuthToken(): Promise<string>
+    generateAuthToken(): Promise<string>,
+    toJSON(): Promise<userJSON & { _id: Types.ObjectId}>,
 }
 
-type UserModel = Model<IUser, {}, IUserMethods>
-
+// type UserModel = Model<IUser, {}, IUserMethods>
+interface UserModel extends Model<IUser, {}, IUserMethods> {
+    findByCredentials(email: string, password: string): Promise<(IUser & Omit<IUser & {
+        _id: Types.ObjectId;
+    }, "generateAuthToken"> & IUserMethods) | null>;
+  }
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     name: {
         type: String,
@@ -116,6 +122,22 @@ userSchema.pre('save', async function(next){
         user.password = await bcrypt.hash(user.password, 8)
     }
     next()
+})
+
+userSchema.static("findByCredentials",async function(email, password){
+    const user = await User.findOne({ email })
+    console.log('user found ', user)
+    if (!user) {
+        throw new Error('Unable to login')
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    console.log('dont passwrld match',isMatch)
+    if (!isMatch) {
+        throw new Error('Unable to login')
+    }
+
+    return user
 })
 const User = model<IUser, UserModel>("User", userSchema)
 
