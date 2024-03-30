@@ -22,7 +22,7 @@ interface IUser{
     avatar: Buffer
 } 
 interface IUserMethods{
-    generateAuthToken(): string
+    generateAuthToken(): Promise<string>
 }
 
 type UserModel = Model<IUser, {}, IUserMethods>
@@ -103,7 +103,13 @@ userSchema.method('generateAuthToken',async function generateAuthToken(){
     await user.save()
     return token
 })
-
+//this property exits on toObjext but unable to right , createdAt: Date, updatedAt: Date, __v:number
+userSchema.method('toJSON', async function toJSON():Promise<{_id: Types.ObjectId, name: string, age: number, email: string} >{
+    const user = this
+    let userObj = user.toObject();
+    const {tokens, avatar, password ,...newObj } = userObj;
+    return newObj;
+})
 userSchema.pre('save', async function(next){
     const user = this
     if(user.isModified("password")){
