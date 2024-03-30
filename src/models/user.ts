@@ -1,10 +1,6 @@
-const mongoose = require('mongoose')
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import { Model, model, Schema, Types, Document, FlatRecord } from "mongoose"
-// const bcrypt = require('bcryptjs')
-// const jwt = require('jsonwebtoken')
-
+import { Model, model, Schema, Types, Document } from "mongoose"
 import { isValidEmail } from "../utils/validation"
 import Task from "./task"
 import config from '../types/env'
