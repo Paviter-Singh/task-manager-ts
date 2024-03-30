@@ -1,11 +1,13 @@
 const mongoose = require('mongoose')
-
-import { model, Schema } from "mongoose"
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+import { Model, model, Schema, Types } from "mongoose"
 // const bcrypt = require('bcryptjs')
 // const jwt = require('jsonwebtoken')
 
 import { isValidEmail } from "../utils/validation"
 import Task from "./task"
+import config from '../types/env'
 
 interface IToken{
     token: string
@@ -16,11 +18,16 @@ interface IUser{
     email: string, 
     password: string,
     age: number
-    tokens: IToken[],
+    tokens: Types.Array<IToken>,
     avatar: Buffer
 } 
+interface IUserMethods{
+    generateAuthToken(): string
+}
 
-const userSchema = new Schema<IUser>({
+type UserModel = Model<IUser, {}, IUserMethods>
+
+const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     name: {
         type: String,
         required: true,
@@ -89,7 +96,21 @@ userSchema.virtual('tasks', {
     foreignField: 'owner'
 })
 
+userSchema.method('generateAuthToken',async function generateAuthToken(){
+    let user = this
+    const token: string = jwt.sign({ _id: user._id.toString() }, config.JWT_SECRET)
+    user.tokens.push({token})
+    await user.save()
+    return token
+})
 
-const User = model<IUser>("User", userSchema)
+userSchema.pre('save', async function(next){
+    const user = this
+    if(user.isModified("password")){
+        user.password = await bcrypt.hash(user.password, 8)
+    }
+    next()
+})
+const User = model<IUser, UserModel>("User", userSchema)
 
 export default User
