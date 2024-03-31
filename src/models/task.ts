@@ -28,3 +28,4 @@ const taskSchema = new Schema<ITask>({
 const Task = model('Task', taskSchema)
 
 export default Task
+export {ITask}
