@@ -141,17 +141,32 @@ router.delete('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>
 })
 router.post('/users/curr/avatar', auth, upload.single('avatar'), async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
   try {
-    if (!req.user || !req.file?.buffer) {
-      throw new Error("No user Found")
+    if (!req.user || !req.file) {
+      throw new Error("Server Error")
     }
-    req.user.avatar = req.file?.buffer
+    req.user.avatar = req.file.buffer
     await req.user.save()
     res.send(req.file.filename)
   }
   catch (e) {
-    res.status(400).send(e)
+    res.status(500).send(e)
   }
 })
+
+router.delete('/users/curr/avatar', auth, async (req: userRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      throw new Error("Internal Error")
+    }
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send()
+  }
+  catch (e) {
+    res.status(500).send()
+  }
+})
+
 router.get('/users/:id/avatar', async (req: userRequest<{ id: ObjectId }>, res: Response) => {
   try {
     const user = await User.findById(req.params.id)
@@ -161,7 +176,7 @@ router.get('/users/:id/avatar', async (req: userRequest<{ id: ObjectId }>, res: 
     res.set('Content-Type', 'image/png')
     res.send(user.avatar)
   } catch (e) {
-    res.status(404).send()
+    res.status(400).send()
   }
 })
 

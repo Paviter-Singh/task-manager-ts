@@ -6,26 +6,26 @@ import Task from "./task"
 import config from '../types/env'
 import { postUserBody, userJSON } from '../types/user'
 
-interface IToken{
+interface IToken {
     token: string
 }
-interface IUser extends postUserBody{
+interface IUser extends postUserBody {
     tokens: Array<IToken>,
-    avatar: Buffer
-} 
-interface IUserMethods{
+    avatar?: Buffer
+}
+interface IUserMethods {
     generateAuthToken(): Promise<string>,
-    toJSON(): Promise<userJSON & { _id: Types.ObjectId}>,
+    toJSON(): Promise<userJSON & { _id: Types.ObjectId }>,
 }
 
 
 type userMongo = (Document<unknown, {}, IUser> & Omit<IUser & {
     _id: Types.ObjectId;
-}, keyof IUserMethods> & IUserMethods) | null 
+}, keyof IUserMethods> & IUserMethods) | null
 // type UserModel = Model<IUser, {}, IUserMethods>
 interface UserModel extends Model<IUser, {}, IUserMethods> {
     findByCredentials(email: string, password: string): Promise<NonNullable<userMongo>>;
-  }
+}
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     name: {
         type: String,
@@ -38,7 +38,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
         required: true,
         trim: true,
         lowercase: true,
-        validate:{
+        validate: {
             validator(value: string) {
                 if (!isValidEmail(value)) {
                     // throw new Error('Email is invalid')
@@ -48,7 +48,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
             },
             message: props => `${props.value} is not a valid email!`
         },
-        
+
     },
     password: {
         type: String,
@@ -65,7 +65,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
             },
             message: props => 'Password cannot contain "password"'
         }
-        
+
     },
     age: {
         type: Number,
@@ -95,30 +95,30 @@ userSchema.virtual('tasks', {
     foreignField: 'owner'
 })
 
-userSchema.method('generateAuthToken',async function generateAuthToken(){
+userSchema.method('generateAuthToken', async function generateAuthToken() {
     let user = this
     const token: string = jwt.sign({ _id: user._id.toString() }, config.JWT_SECRET)
-    user.tokens.push({token})
+    user.tokens.push({ token })
     await user.save()
     return token
 })
 //this property exits on toObjext but unable to right , createdAt: Date, updatedAt: Date, __v:number
-userSchema.method('toJSON', async function toJSON():Promise<{_id: Types.ObjectId, name: string, age: number, email: string} >{
+userSchema.method('toJSON', async function toJSON(): Promise<{ _id: Types.ObjectId, name: string, age: number, email: string }> {
     const user = this
-    
+
     let userObj = user.toObject();
-    const {tokens, avatar, password ,...newObj } = userObj;
+    const { tokens, avatar, password, ...newObj } = userObj;
     return newObj;
 })
-userSchema.pre('save', async function(next){
+userSchema.pre('save', async function (next) {
     const user = this
-    if(user.isModified("password")){
+    if (user.isModified("password")) {
         user.password = await bcrypt.hash(user.password, 8)
     }
     next()
 })
 
-userSchema.static("findByCredentials",async function(email, password){
+userSchema.static("findByCredentials", async function (email, password) {
     const user = await User.findOne({ email })
     if (!user) {
         throw new Error('Unable to login')
