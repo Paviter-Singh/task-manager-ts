@@ -114,4 +114,16 @@ router.patch('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>,
     res.status(400).send(e)
   }
 })
+router.delete('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+  try {
+    if (!req.user) {
+      throw new Error("No user Found")
+    }
+    await User.findOneAndDelete({ _id: req.user._id })
+    res.send(req.user)
+  }
+  catch (e) {
+    res.status(400).send(e)
+  }
+})
 export default router;
