@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import User, { IToken } from "../models/user";
+import User from "../models/user";
 import {
   postLoginBody,
   postUserBody,
@@ -7,7 +7,6 @@ import {
   userRequest,
 } from "../types/user";
 import { auth } from "../middleware/auth";
-import { Types } from "mongoose";
 const router = express.Router();
 
 router.post(
@@ -86,4 +85,33 @@ router.post(
     }
   }
 );
+
+router.get('/users/curr', auth, async (req: userRequest, res: Response) => {
+  const user = await req.user?.toJSON()
+  res.send(user)
+})
+
+router.patch('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+  try {
+    if (!req.user) {
+      throw new Error("user Not found");
+    }
+
+    const keys: (keyof postUserBody)[] = ['age', 'email', 'password', 'name']
+
+    keys.forEach(key => {
+      if (!req.user || !req.body[key] || !req.user[key]) {
+        return;
+      }
+      (req.user[key] as string | number) = req.body[key];
+    })
+
+    await req.user.save()
+    const user = await req.user.toJSON()
+    res.send(user)
+  }
+  catch (e) {
+    res.status(400).send(e)
+  }
+})
 export default router;

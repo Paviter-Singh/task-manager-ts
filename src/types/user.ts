@@ -19,9 +19,10 @@ interface userJSON {
     updatedAt: Date,
 }
 
-type userRequest = Request & {
-    user?: userMongo
-    token?: string
+interface userRequest<Params = {}, Query = {}, Body = {}, P = Request['params']> extends Request<Params, Query, Body, P> {
+    // Define your custom properties here
+    user?: userMongo;
+    token?: string;
 }
 
 export { userJSON, postUserBody, postLoginBody, userRequest }
