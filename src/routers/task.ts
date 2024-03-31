@@ -12,8 +12,6 @@ taskRouter.post('/task', auth, async (req: userRequest<{}, {}, ITask>, res: Resp
         }
         const task = new Task({ ...req.body, owner: req.user?._id })
         await task.save();
-        req.user.tasks?.push(task._id)
-        req.user.save()
         res.status(201).send(task)
     }
     catch (e) {

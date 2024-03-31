@@ -23,7 +23,8 @@ interface IUserMethods {
 type userMongo = (Document<unknown, {}, IUser> & Omit<IUser & {
     _id: Types.ObjectId;
 }, keyof IUserMethods> & IUserMethods) | null
-// type UserModel = Model<IUser, {}, IUserMethods>
+
+
 interface UserModel extends Model<IUser, {}, IUserMethods> {
     findByCredentials(email: string, password: string): Promise<NonNullable<userMongo>>;
 }
@@ -86,14 +87,17 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     avatar: {
         type: Buffer
     },
-    tasks: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Task'
-    }]
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
+    toObject: { virtuals: true }
 })
 
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
+  });
 
 userSchema.method('generateAuthToken', async function generateAuthToken() {
     let user = this
