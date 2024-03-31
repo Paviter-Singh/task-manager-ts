@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import User from "../models/user";
+import multer from 'multer';
 import {
   postLoginBody,
   postUserBody,
@@ -7,7 +8,20 @@ import {
   userRequest,
 } from "../types/user";
 import { auth } from "../middleware/auth";
+import { ObjectId } from "mongoose";
 const router = express.Router();
+
+const upload = multer({
+  limits: {
+    fileSize: 10000000
+  },
+  fileFilter(req: userRequest, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error('Please upload an image'))
+    }
+    cb(null, true)
+  }
+})
 
 router.post(
   "/user",
@@ -55,7 +69,6 @@ router.post(
   "/user/logout",
   auth,
   (req: userRequest, res: Response, next: NextFunction) => {
-    console.log("logout is still acalled ");
     try {
       if (!req.user || !req.token) {
         throw new Error("No User Found");
@@ -126,4 +139,30 @@ router.delete('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>
     res.status(400).send(e)
   }
 })
+router.post('/users/curr/avatar', auth, upload.single('avatar'), async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+  try {
+    if (!req.user || !req.file?.buffer) {
+      throw new Error("No user Found")
+    }
+    req.user.avatar = req.file?.buffer
+    await req.user.save()
+    res.send(req.file.filename)
+  }
+  catch (e) {
+    res.status(400).send(e)
+  }
+})
+router.get('/users/:id/avatar', async (req: userRequest<{ id: ObjectId }>, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id)
+    if (!user || !user.avatar) {
+      throw new Error()
+    }
+    res.set('Content-Type', 'image/png')
+    res.send(user.avatar)
+  } catch (e) {
+    res.status(404).send()
+  }
+})
+
 export default router;
