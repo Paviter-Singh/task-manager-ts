@@ -11,7 +11,8 @@ interface IToken {
 }
 interface IUser extends postUserBody {
     tokens: Array<IToken>,
-    avatar?: Buffer
+    avatar?: Buffer,
+    tasks?: Array<Types.ObjectId>
 }
 interface IUserMethods {
     generateAuthToken(): Promise<string>,
@@ -84,16 +85,15 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     }],
     avatar: {
         type: Buffer
-    }
+    },
+    tasks: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Task'
+    }]
 }, {
     timestamps: true
 })
 
-userSchema.virtual('tasks', {
-    ref: 'Task',
-    localField: '_id',
-    foreignField: 'owner'
-})
 
 userSchema.method('generateAuthToken', async function generateAuthToken() {
     let user = this

@@ -25,7 +25,6 @@ const taskSchema = new Schema<ITask>({
     timestamps: true
 })
 
-const Task = model('Task', taskSchema)
-
+const Task = model<ITask>('Task', taskSchema)
 export default Task
 export {ITask}
