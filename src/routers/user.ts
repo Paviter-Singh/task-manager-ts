@@ -5,7 +5,7 @@ import {
   postLoginBody,
   postUserBody,
   userJSON,
-  userRequest,
+  UserRequest,
 } from "../types/user";
 import { auth } from "../middleware/auth";
 import { ObjectId } from "mongoose";
@@ -13,9 +13,9 @@ const router = express.Router();
 
 const upload = multer({
   limits: {
-    fileSize: 10000000
+    fileSize: 1000000
   },
-  fileFilter(req: userRequest, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+  fileFilter(req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
     if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
       return cb(new Error('Please upload an image'))
     }
@@ -26,7 +26,7 @@ const upload = multer({
 router.post(
   "/user",
   async (
-    req: Request<{}, {}, postUserBody>,
+    req: Omit<Request<{}, {}, postUserBody>, 'token' | 'user'>,
     res: Response,
     next: NextFunction
   ) => {
@@ -50,7 +50,7 @@ router.post(
 router.post(
   "/users/login",
   async (
-    req: Request<{}, {}, postLoginBody>,
+    req: Omit<Request<{}, {}, postLoginBody>, keyof UserRequest>,
     res: Response,
     next: NextFunction
   ) => {
@@ -68,11 +68,8 @@ router.post(
 router.post(
   "/user/logout",
   auth,
-  (req: userRequest, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user || !req.token) {
-        throw new Error("No User Found");
-      }
+  (req: Request, res: Response, next: NextFunction) => {
+    try { 
       req.user.tokens = req.user.tokens.filter((token) => token !== token);
       req.user.save();
       res.send();
@@ -85,11 +82,8 @@ router.post(
 router.post(
   "/user/logout",
   auth,
-  (req: userRequest, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user) {
-        throw new Error("Noe user Found");
-      }
       req.user.tokens = [];
       req.user.save();
       res.send();
@@ -99,16 +93,13 @@ router.post(
   }
 );
 
-router.get('/users/curr', auth, async (req: userRequest, res: Response) => {
+router.get('/users/curr', auth, async (req: Request, res: Response) => {
   const user = await req.user?.toJSON()
   res.send(user)
 })
 
-router.patch('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+router.patch('/users/curr', auth, async (req: Request<{}, {}, postUserBody>, res: Response) => {
   try {
-    if (!req.user) {
-      throw new Error("user Not found");
-    }
 
     const keys: (keyof postUserBody)[] = ['age', 'email', 'password', 'name']
 
@@ -127,11 +118,8 @@ router.patch('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>,
     res.status(400).send(e)
   }
 })
-router.delete('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+router.delete('/users/curr', auth, async (req: Request<{}, {}, postUserBody>, res: Response) => {
   try {
-    if (!req.user) {
-      throw new Error("No user Found")
-    }
     await User.findOneAndDelete({ _id: req.user._id })
     res.send(req.user)
   }
@@ -139,9 +127,9 @@ router.delete('/users/curr', auth, async (req: userRequest<{}, {}, postUserBody>
     res.status(400).send(e)
   }
 })
-router.post('/users/curr/avatar', auth, upload.single('avatar'), async (req: userRequest<{}, {}, postUserBody>, res: Response) => {
+router.post('/users/curr/avatar', auth, upload.single('avatar'), async (req: Request<{}, {}, postUserBody>, res: Response) => {
   try {
-    if (!req.user || !req.file) {
+    if (!req.file) {
       throw new Error("Server Error")
     }
     req.user.avatar = req.file.buffer
@@ -153,11 +141,8 @@ router.post('/users/curr/avatar', auth, upload.single('avatar'), async (req: use
   }
 })
 
-router.delete('/users/curr/avatar', auth, async (req: userRequest, res: Response) => {
+router.delete('/users/curr/avatar', auth, async (req: Request, res: Response) => {
   try {
-    if (!req.user) {
-      throw new Error("Internal Error")
-    }
     req.user.avatar = undefined
     await req.user.save()
     res.send()
@@ -167,7 +152,7 @@ router.delete('/users/curr/avatar', auth, async (req: userRequest, res: Response
   }
 })
 
-router.get('/users/:id/avatar', async (req: userRequest<{ id: ObjectId }>, res: Response) => {
+router.get('/users/:id/avatar', async (req: Omit<Request<{ id: ObjectId }>, keyof UserRequest>, res: Response) => {
   try {
     const user = await User.findById(req.params.id)
     if (!user || !user.avatar) {

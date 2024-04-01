@@ -1,15 +1,11 @@
 import Task, { ITask } from "../models/task";
-import { Router, Response } from "express";
-import { userRequest } from "../types/user";
+import { Router, Response, Request } from "express";
 import { auth } from "../middleware/auth";
 
 const taskRouter = Router()
 
-taskRouter.post('/task', auth, async (req: userRequest<{}, {}, ITask>, res: Response) => {
+taskRouter.post('/task', auth, async (req: Request<{}, {}, ITask>, res: Response) => {
     try {
-        if (!req.user) {
-            throw new Error();
-        }
         const task = new Task({ ...req.body, owner: req.user?._id })
         await task.save();
         res.status(201).send(task)
@@ -19,14 +15,10 @@ taskRouter.post('/task', auth, async (req: userRequest<{}, {}, ITask>, res: Resp
     }
 })
 
-taskRouter.get('/tasks', auth, async (req: userRequest, res: Response) => {
+taskRouter.get('/tasks', auth, async (req: Request, res: Response) => {
     try {
-        if (!req.user) {
-            throw new Error('no user found');
-        }
         const populatedUser = await req.user.populate<{ tasks: Array<ITask> }>('tasks')
         const userInfo = await populatedUser.toJSON()
-
         res.send(userInfo)
     }
     catch (e) {

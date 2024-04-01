@@ -2,17 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import config from "../types/env";
 import { Types } from "mongoose";
-import User, { userMongo } from "../models/user";
+import User from "../models/user";
 
 interface jwtPayload extends jwt.JwtPayload {
   _id: Types.ObjectId;
 }
 
 async function auth(
-  req: Request & {
-    user?: userMongo;
-    token?: string;
-  },
+  req: Request,
   res: Response,
   next: NextFunction
 ) {

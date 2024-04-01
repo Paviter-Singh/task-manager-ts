@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
 import { userMongo } from '../models/user';
-import { Request } from "express";
+
 interface postLoginBody {
     email: string,
     password: string
 }
+
 interface postUserBody extends postLoginBody {
     name: string,
     age: number,
@@ -19,10 +20,16 @@ interface userJSON {
     updatedAt: Date,
 }
 
-interface userRequest<Params = {}, Query = {}, Body = {}, P = Request['params']> extends Request<Params, Query, Body, P> {
-    // Define your custom properties here
-    user?: userMongo;
-    token?: string;
+interface UserRequest{
+    user: NonNullable<userMongo>;
+    token: string;
 }
 
-export { userJSON, postUserBody, postLoginBody, userRequest }
+declare global {
+  namespace Express {
+    export interface Request extends UserRequest {
+   
+    }
+  }
+}
+export { userJSON, postUserBody, postLoginBody, UserRequest }
