@@ -30,6 +30,7 @@ router.post(
     res: Response,
     next: NextFunction
   ) => {
+    console.log(req.body)
     const user = new User(req.body);
     try {
       await user.save();

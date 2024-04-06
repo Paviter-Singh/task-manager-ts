@@ -109,7 +109,6 @@ userSchema.method('generateAuthToken', async function generateAuthToken() {
 //this property exits on toObjext but unable to right , createdAt: Date, updatedAt: Date, __v:number
 userSchema.method('toJSON', async function toJSON(): Promise<{ _id: Types.ObjectId, name: string, age: number, email: string }> {
     const user = this
-
     let userObj = user.toObject();
     const { tokens, avatar, password, ...newObj } = userObj;
     return newObj;
