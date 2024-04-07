@@ -37,7 +37,7 @@ router.post(
 
       const token = await user.generateAuthToken();
       const userInfo: userJSON = await user.toJSON();
-
+      res.cookie('user', token)
       res.status(201).send({ user: userInfo, token });
     } catch (e: any) {
       if (e.code === 11000) {
@@ -60,6 +60,12 @@ router.post(
       const user = await User.findByCredentials(email, password);
       const token = await user.generateAuthToken();
       const userInfo = await user.toJSON();
+      res.cookie('user', token, {
+        // expires: new Date(Date.now() + expiration),
+        secure: false, // set to true if your using https
+        httpOnly: true,
+        
+      })
       res.send({ user: userInfo, token });
     } catch (e) {
       res.status(400).send(e);
