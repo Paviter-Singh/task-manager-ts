@@ -18,7 +18,7 @@ taskRouter.post('/task', auth, async (req: Request<{}, {}, ITask>, res: Response
 
 taskRouter.get('/tasks', auth, async (req: Request, res: Response) => {
     try {
-        const populatedUser = await req.user.populate<{ tasks: Array<ITask> }>('tasks', undefined, undefined, { completed: false}, {path: 'tasks', options:{limit: 10, sort:{ description : -1}, }})
+        const populatedUser = await req.user.populate<{ tasks: Array<ITask> }>('tasks', undefined, undefined, {} , {path: 'tasks', options:{limit: 10, sort:{ description : -1}, }})
         const userInfo = await populatedUser.toJSON()
         res.send(userInfo)
     }

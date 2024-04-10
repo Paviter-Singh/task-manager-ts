@@ -1,17 +1,21 @@
-import { useState } from 'react';
 import { Login } from './components/login';
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import DisplayTasks from './components/DisplayTasks';
 
+import Home from './components/Home';
+import Register from './components/Register';
+
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
       <BrowserRouter>
         <Routes>
+          <Route path='/' element={<Home/>}/>
+          <Route path='register' element={<Register/>}/>
           <Route path='/login' element={<Login />} />
           <Route path='/getTasks' element={<DisplayTasks />} />
+
         </Routes>
       </BrowserRouter>
     </>
