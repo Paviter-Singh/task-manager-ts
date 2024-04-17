@@ -14,10 +14,26 @@ async function auth(
   next: NextFunction
 ) {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    const allowedMethods = [
+      // "OPTIONS",
+      // "HEAD",
+      // "CONNECT",
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+    ];
 
+    if (!allowedMethods.includes(req.method)) {
+      res.status(405).send(`${req.method} not allowed.`);
+    }
+    let token = req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
-      throw new Error("Not Authorize");
+      token = req.cookies.user
+      if (!token) {
+        throw new Error("Not Authorize");
+      }
     }
     var decoded = <jwtPayload>jwt.verify(token, config.JWT_SECRET);
 

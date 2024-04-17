@@ -36,7 +36,7 @@ router.post(
 
       const token = await user.generateAuthToken();
       const userInfo: userJSON = await user.toJSON();
-
+      res.cookie('user', token)
       res.status(201).send({ user: userInfo, token });
     } catch (e: any) {
       if (e.code === 11000) {
@@ -59,6 +59,12 @@ router.post(
       const user = await User.findByCredentials(email, password);
       const token = await user.generateAuthToken();
       const userInfo = await user.toJSON();
+      res.cookie('user', token, {
+        // expires: new Date(Date.now() + expiration),
+        secure: false, // set to true if your using https
+        httpOnly: true,
+        
+      })
       res.send({ user: userInfo, token });
     } catch (e) {
       res.status(400).send(e);
@@ -72,6 +78,7 @@ router.post(
     try { 
       req.user.tokens = req.user.tokens.filter((token) => token !== token);
       req.user.save();
+      res.clearCookie('user')
       res.send();
     } catch (e) {
       res.status(500).send(e);
@@ -161,6 +168,19 @@ router.get('/users/:id/avatar', async (req: Omit<Request<{ id: ObjectId }>, keyo
     res.set('Content-Type', 'image/png')
     res.send(user.avatar)
   } catch (e) {
+    res.status(400).send()
+  }
+})
+router.get('/users/avatar', auth, async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.user.id)
+    if (!user || !user.avatar) {
+      throw new Error()
+    }
+    res.set('Content-Type', 'image/png')
+    res.send(user.avatar)
+  }
+  catch (e) {
     res.status(400).send()
   }
 })
