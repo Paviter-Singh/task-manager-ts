@@ -101,7 +101,7 @@ userSchema.virtual('tasks', {
 
 userSchema.method('generateAuthToken', async function generateAuthToken() {
     let user = this
-    const token: string = jwt.sign({ _id: user._id.toString() }, config.JWT_SECRET)
+    const token: string = jwt.sign({ _id: user._id.toString() }, config.JWT_SECRET, { expiresIn: '12h', algorithm:"HS512"})
     user.tokens.push({ token })
     await user.save()
     return token
@@ -109,7 +109,6 @@ userSchema.method('generateAuthToken', async function generateAuthToken() {
 //this property exits on toObjext but unable to right , createdAt: Date, updatedAt: Date, __v:number
 userSchema.method('toJSON', async function toJSON(): Promise<{ _id: Types.ObjectId, name: string, age: number, email: string }> {
     const user = this
-
     let userObj = user.toObject();
     const { tokens, avatar, password, ...newObj } = userObj;
     return newObj;
