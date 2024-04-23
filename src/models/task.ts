@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose"
 
  interface ITask{
     description: string,
-    completed: Boolean,
+    completed: boolean,
     owner: Schema.Types.ObjectId
  }
 
