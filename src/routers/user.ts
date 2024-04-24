@@ -40,7 +40,7 @@ router.post(
       res.status(201).send({ user: userInfo, token });
     } catch (e: any) {
       if (e.code === 11000) {
-        return res.status(400).send("email exist");
+        return res.status(400).send("email exists");
       }
       res.status(400).send(e);
     }
@@ -63,7 +63,6 @@ router.post(
         // expires: new Date(Date.now() + expiration),
         secure: false, // set to true if your using https
         httpOnly: true,
-        
       })
       res.send({ user: userInfo, token });
     } catch (e) {
